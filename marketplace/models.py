@@ -43,7 +43,7 @@ class Category(TrackingModel, models.Model):
 class Ad(TrackingModel, models.Model):
     heading = models.CharField(max_length=255)
     text = models.TextField
-    image = CloudinaryField('image')
+    image = CloudinaryField('image', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
