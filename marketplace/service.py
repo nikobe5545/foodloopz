@@ -8,7 +8,7 @@ from django.core.serializers import serialize
 from django.db.models import Q
 
 from marketplace import constant
-from marketplace.models import Ad, Category, Organization
+from marketplace.models import Ad, Category, Organization, Account
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def handle_incoming_message(text_data: str, scope):
     if action == constant.ACTION_VIEW_AD:
         return _handle_view_ad(text_data_dict)
     if action == constant.ACTION_SAVE_UPDATE_AD:
-        return _handle_save_update_ad(text_data_dict)
+        return _handle_save_update_ad(text_data_dict, scope)
     if action == constant.ACTION_SAVE_UPDATE_USER:
         return _handle_save_update_user(text_data_dict, scope)
     if action == constant.ACTION_RESET_PASSWORD:
@@ -68,8 +68,8 @@ def _handle_search_ads(text_data_dict: dict):
         if category_id is not None:
             condition &= Q(category_id=category_id)
         result = Ad.objects.filter(condition)
-        _create_message_dict(constant.ACTION_SEARCH_ADS, constant.STATUS_OK, 'Top ads returned',
-                             serialize('json', result))
+        return _create_message_dict(constant.ACTION_SEARCH_ADS, constant.STATUS_OK, 'Top ads returned',
+                                    serialize('json', result))
     except Exception as error:
         logger.warning(f'Search for ads failed: {error}')
         return _create_message_dict(constant.ACTION_SEARCH_ADS, constant.STATUS_FAIL, f'Search for ads failed: {error}')
@@ -80,19 +80,23 @@ def _handle_view_ad(text_data_dict: dict):
         payload = text_data_dict[constant.PAYLOAD]
         ad_id = payload[constant.AD_ID]
         result = Ad.objects.get(id=ad_id)
-        _create_message_dict(constant.ACTION_VIEW_AD, constant.STATUS_OK, 'Ad returned',
-                             serialize('json', result))
+        return _create_message_dict(constant.ACTION_VIEW_AD, constant.STATUS_OK, 'Ad returned',
+                                    serialize('json', result))
     except Exception as error:
         logger.warning(f'Could not find Ad: {error}')
         return _create_message_dict(constant.ACTION_VIEW_AD, constant.STATUS_FAIL, f'Search for ad failed: {error}')
 
 
-def _handle_save_update_ad(text_data_dict: dict):
+def _handle_save_update_ad(text_data_dict: dict, scope):
     try:
+        user = scope[constant.SCOPE_USER]
+        if user.is_anonymous:
+            return _create_message_dict(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_FAIL,
+                                        'User must be logged in to save/update ad')
+        account = Account.objects.get(user_id=user.id)
         payload = text_data_dict[constant.PAYLOAD]
         heading = payload[constant.HEADING]
         text = payload[constant.TEXT]
-        image = payload[constant.IMAGE]
         category_id = payload[constant.CATEGORY_ID]
         organization_id = payload[constant.ORGANIZATION_ID]
         category = Category.objects.get(id=category_id)
@@ -100,18 +104,21 @@ def _handle_save_update_ad(text_data_dict: dict):
         ad_id = payload.get(constant.AD_ID, None)
         try:
             ad = Ad.objects.get(id=ad_id)
+            if user.id != ad.account.user.id:
+                return _create_message_dict(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_FAIL,
+                                            'Users can only edit their own ads')
             ad.heading = heading
             ad.text = text
-            ad.image = image
             ad.category = category
             ad.organization = organization
         except Ad.DoesNotExist:
             logger.debug('Ad not found. Creating new.')
-            ad = Ad(heading=heading, text=text, image=image, category=category, organization=organization)
+            ad = Ad(heading=heading, text=text, category=category, organization=organization, account=account)
+        # TODO add/edit images
         ad.save()
         persisted_ad = Ad.objects.get(id=ad.id)
-        _create_message_dict(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_OK, 'Ad saved/updated',
-                             serialize('json', persisted_ad))
+        return _create_message_dict(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_OK, 'Ad saved/updated',
+                                    serialize('json', persisted_ad))
     except Exception as error:
         logger.warning(f'Ad could not be saved/updated: {error}')
         return _create_message_dict(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_FAIL,

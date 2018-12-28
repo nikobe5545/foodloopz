@@ -29,7 +29,7 @@ class Account(TrackingModel, models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name} of {self.organization}'
+        return f'{self.user.email} of {self.organization}'
 
 
 class Category(TrackingModel, models.Model):
@@ -43,9 +43,14 @@ class Category(TrackingModel, models.Model):
 class Ad(TrackingModel, models.Model):
     heading = models.CharField(max_length=255)
     text = models.TextField
-    image = CloudinaryField('image', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.heading} || {self.organization}'
+
+
+class AdImage(TrackingModel, models.Model):
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE)
+    image = CloudinaryField('image')
