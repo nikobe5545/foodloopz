@@ -16,6 +16,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         AccountInline,
         AdInline,
     ]
+    search_fields = ('name', 'organization_number')
 
 
 admin.site.register(Organization, OrganizationAdmin)

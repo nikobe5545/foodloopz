@@ -3,7 +3,7 @@ import logging
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from marketplace import service
+from marketplace.websocket import service
 
 
 class MainConsumer(AsyncWebsocketConsumer):
