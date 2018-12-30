@@ -8,7 +8,7 @@ from django.core.serializers import serialize
 from django.db.models import Q
 
 from marketplace import constant
-from marketplace.models import Ad, Category, Organization, Account
+from marketplace.models import Ad, AdCategory, Organization, Account
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def handle_save_update_ad(payload: dict, user):
         text = payload[constant.TEXT]
         category_id = payload[constant.CATEGORY_ID]
         organization_id = payload[constant.ORGANIZATION_ID]
-        category = Category.objects.get(id=category_id)
+        category = AdCategory.objects.get(id=category_id)
         organization = Organization.objects.get(id=organization_id)
         ad_id = payload.get(constant.AD_ID, None)
         try:

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from marketplace.models import Organization, Category, Account, Ad
+from marketplace.models import Organization, AdCategory, Account, Ad, Address
 
 
 class AccountInline(admin.TabularInline):
@@ -9,6 +9,10 @@ class AccountInline(admin.TabularInline):
 
 class AdInline(admin.TabularInline):
     model = Ad
+
+
+class AddressInline(admin.TabularInline):
+    model = Address
 
 
 class OrganizationAdmin(admin.ModelAdmin):
@@ -20,6 +24,6 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Organization, OrganizationAdmin)
-admin.site.register(Category)
+admin.site.register(AdCategory)
 admin.site.register(Account)
 admin.site.register(Ad)
