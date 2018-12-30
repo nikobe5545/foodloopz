@@ -20,13 +20,22 @@ class Address(TrackingModel, models.Model):
     zip_code = models.CharField(max_length=12)
     city = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f'{self.address}\n{self.zip_code} {self.city}'
+
 
 class OrganizationCertification(TrackingModel, models.Model):
     name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class OrganizationCategory(TrackingModel, models.Model):
     name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.name}'
 
 
 class Organization(TrackingModel, models.Model):
@@ -34,7 +43,7 @@ class Organization(TrackingModel, models.Model):
     name = models.CharField(max_length=255)
     invoice_address = models.OneToOneField(Address, on_delete=models.CASCADE, related_name='invoice_address')
     visiting_address = models.OneToOneField(Address, on_delete=models.CASCADE, related_name='visiting_address',
-                                            null=True)
+                                            null=True, blank=True)
     number_of_employees = models.IntegerField(null=True)
     certifications = models.ManyToManyField(OrganizationCertification)
     has_alcohol_license = models.BooleanField(null=True)
@@ -63,6 +72,9 @@ class AdCategory(TrackingModel, models.Model):
 class AdCertification(TrackingModel, models.Model):
     name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Measurement(Enum):
     KILOGRAM = 'Kg'
@@ -81,8 +93,8 @@ class Ad(TrackingModel, models.Model):
     category = models.ForeignKey(AdCategory, on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    published_date = models.DateField(null=True)
-    unpublished_date = models.DateField(null=True)
+    published_date = models.DateField(null=True, blank=True)
+    unpublished_date = models.DateField(null=True, blank=True)
     price = models.FloatField(default=0)
     measurement = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Measurement])
     amount_per_measurement = models.FloatField
@@ -90,7 +102,7 @@ class Ad(TrackingModel, models.Model):
     total_weight = models.FloatField
     shipping = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Shipping])
     certifications = models.ManyToManyField(AdCertification)
-    image = CloudinaryField('image')
+    image = CloudinaryField('image', null=True, blank=True)
 
     def __str__(self):
         return f'{self.product} published {self.published_date} by {self.account}'
@@ -101,4 +113,10 @@ class Inquiry(TrackingModel, models.Model):
     text = models.TextField
     image = CloudinaryField()
     price = models.FloatField(default=0)
+    published_date = models.DateField(null=True)
+    unpublished_date = models.DateField(null=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.product} published {self.published_date} by {self.account}'
