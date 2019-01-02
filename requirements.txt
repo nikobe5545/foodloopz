@@ -1,3 +1,4 @@
 django >= 2.1
 channels >= 2.1
 cloudinary >= 1.15
+djangorestframework >= 3.9.0

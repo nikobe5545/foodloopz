@@ -52,6 +52,11 @@ class Organization(TrackingModel, models.Model):
     def __str__(self):
         return f'{self.name} - {self.organization_number}'
 
+    def get_serialization_dict(self):
+        return {
+            'id': self.id
+        }
+
 
 class Account(TrackingModel, models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -59,6 +64,20 @@ class Account(TrackingModel, models.Model):
 
     def __str__(self):
         return f'{self.user.email} of {self.organization}'
+
+    def get_serialization_dict(self):
+        return {
+            'id': self.id,
+            'organization': {
+                'id': self.organization.id,
+
+            },
+            'dateJoined': self.user.date_joined,
+            'email': self.user.email,
+            'firstName': self.user.first_name,
+            'lastName': self.user.last_name,
+            'username': self.user.username
+        }
 
 
 class AdCategory(TrackingModel, models.Model):
@@ -89,7 +108,7 @@ class Shipping(Enum):
 
 class Ad(TrackingModel, models.Model):
     product = models.CharField(max_length=255)
-    text = models.TextField
+    text = models.TextField()
     category = models.ForeignKey(AdCategory, on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
@@ -97,9 +116,9 @@ class Ad(TrackingModel, models.Model):
     unpublished_date = models.DateField(null=True, blank=True)
     price = models.FloatField(default=0)
     measurement = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Measurement])
-    amount_per_measurement = models.FloatField
-    quantity = models.IntegerField
-    total_weight = models.FloatField
+    amount_per_measurement = models.FloatField()
+    quantity = models.IntegerField()
+    total_weight = models.FloatField()
     shipping = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Shipping])
     certifications = models.ManyToManyField(AdCertification)
     image = CloudinaryField('image', null=True, blank=True)
@@ -107,10 +126,19 @@ class Ad(TrackingModel, models.Model):
     def __str__(self):
         return f'{self.product} published {self.published_date} by {self.account}'
 
+    def get_serialization_dict(self):
+        return {
+            'id': self.id,
+            'created': self.created.isoformat(),
+            'updated': self.updated.isoformat(),
+            'product': self.product,
+            'text': self.text
+        }
+
 
 class Inquiry(TrackingModel, models.Model):
     product = models.CharField(max_length=255)
-    text = models.TextField
+    text = models.TextField()
     image = CloudinaryField()
     price = models.FloatField(default=0)
     published_date = models.DateField(null=True)

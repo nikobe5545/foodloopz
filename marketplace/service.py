@@ -9,6 +9,7 @@ from django.db.models import Q
 
 from marketplace import constant
 from marketplace.models import Ad, AdCategory, Organization, Account
+from marketplace.serializers import AdSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,11 @@ class NotAuthorized(Exception):
 def handle_top_ads():
     try:
         result = Ad.objects.order_by('-created')[:5]
-        return create_message(constant.ACTION_TOP_ADS, constant.STATUS_OK, 'Top ads returned',
-                              serialize('json', result))
+        return create_message(constant.ACTION_PUSH_TOP_ADS, constant.STATUS_OK, 'Top ads returned',
+                              AdSerializer(result, many=True).data)
     except Exception as error:  # NOQA
         logger.warning(f'Could not fetch top ads: {error}')
-        return create_message(constant.ACTION_TOP_ADS, constant.STATUS_FAIL, f'Fetching top ads failed: {error}')
+        return create_message(constant.ACTION_PUSH_TOP_ADS, constant.STATUS_FAIL, f'Fetching top ads failed: {error}')
 
 
 def handle_login(payload: dict, scope):
@@ -48,7 +49,7 @@ def handle_search_ads(payload: dict):
             condition &= Q(category_id=category_id)
         result = Ad.objects.filter(condition)
         return create_message(constant.ACTION_SEARCH_ADS, constant.STATUS_OK, 'Top ads returned',
-                              serialize('json', result))
+                              AdSerializer(result, many=True).data)
     except Exception as error:
         logger.warning(f'Search for ads failed: {error}')
         return create_message(constant.ACTION_SEARCH_ADS, constant.STATUS_FAIL, f'Search for ads failed: {error}')
@@ -58,11 +59,11 @@ def handle_view_ad(payload: dict):
     try:
         ad_id = payload[constant.AD_ID]
         result = Ad.objects.get(id=ad_id)
-        return create_message(constant.ACTION_VIEW_AD, constant.STATUS_OK, 'Ad returned',
-                              serialize('json', result))
+        return create_message(constant.ACTION_PUSH_AD, constant.STATUS_OK, 'Ad returned',
+                              AdSerializer(result).data)
     except Exception as error:
         logger.warning(f'Could not find Ad: {error}')
-        return create_message(constant.ACTION_VIEW_AD, constant.STATUS_FAIL, f'Search for ad failed: {error}')
+        return create_message(constant.ACTION_PUSH_AD, constant.STATUS_FAIL, f'Search for ad failed: {error}')
 
 
 def handle_save_update_ad(payload: dict, user):
@@ -94,7 +95,7 @@ def handle_save_update_ad(payload: dict, user):
         ad.save()
         persisted_ad = Ad.objects.get(id=ad.id)
         return create_message(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_OK, 'Ad saved/updated',
-                              serialize('json', persisted_ad))
+                              AdSerializer(persisted_ad).data)
     except Exception as error:
         logger.warning(f'Ad could not be saved/updated: {error}')
         return create_message(constant.ACTION_SAVE_UPDATE_AD, constant.STATUS_FAIL,

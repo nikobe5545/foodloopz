@@ -10,9 +10,7 @@ from foodloopz import settings
 @require_http_methods('GET')
 def get_signature(request: HttpRequest):
     if request.user.is_authenticated:
-        parameters = dict(request.GET)
-        parameters['timestamp'] = int(datetime.utcnow().timestamp())
-        parameters['api_key'] = settings.CLOUDINARY_API_KEY
+        parameters = request.GET.dict()
         signature = api_sign_request(parameters, settings.CLOUDINARY_SECRET_KEY)
         return HttpResponse(signature)
     else:

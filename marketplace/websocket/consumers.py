@@ -21,21 +21,24 @@ class MainConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         self.logger.debug(f'text_data = {text_data}, session = {self.scope["session"]}, user = {self.scope["user"]}')
         payload = _handle_incoming_message(text_data=text_data, scope=self.scope)
-        await self.send(text_data=json.dumps(payload))
+        if payload is not None:
+            await self.send(text_data=json.dumps(payload))
+        else:
+            self.logger.warning(f'Action not found. Incoming data = {text_data}')
 
 
 def _handle_incoming_message(text_data: str, scope):
     text_data_dict = json.loads(text_data)
     action = text_data_dict[constant.ACTION]
-    payload = text_data_dict[constant.PAYLOAD]
+    payload = text_data_dict.get(constant.PAYLOAD, None)
     user = scope[constant.SESSION_SCOPE_USER]
-    if action == constant.ACTION_TOP_ADS:
+    if action == constant.ACTION_FETCH_TOP_ADS:
         return handle_top_ads()
     if action == constant.ACTION_LOG_IN:
         return handle_login(payload, scope)
     if action == constant.ACTION_SEARCH_ADS:
         return handle_search_ads(payload)
-    if action == constant.ACTION_VIEW_AD:
+    if action == constant.ACTION_FETCH_AD:
         return handle_view_ad(payload)
     if action == constant.ACTION_SAVE_UPDATE_AD:
         return handle_save_update_ad(payload, user)
