@@ -21,23 +21,23 @@ class NotAuthorized(Exception):
 def handle_top_ads():
     try:
         result = Ad.objects.order_by('-created')[:5]
-        return create_message(constant.ACTION_PUSH_TOP_ADS, constant.STATUS_OK, 'Top ads returned',
+        return create_message(constant.ACTION_TOP_ADS, constant.STATUS_OK, 'Top ads returned',
                               AdSerializer(result, many=True).data)
     except Exception as error:  # NOQA
         logger.warning(f'Could not fetch top ads: {error}')
-        return create_message(constant.ACTION_PUSH_TOP_ADS, constant.STATUS_FAIL, f'Fetching top ads failed: {error}')
+        return create_message(constant.ACTION_TOP_ADS, constant.STATUS_FAIL, f'Fetching top ads failed: {error}')
 
 
 def handle_login(payload: dict, scope):
     try:
-        username = payload[constant.USERNAME]
+        email = payload[constant.EMAIL]
         password = payload[constant.PASSWORD]
-        user = authenticate(username=username, password=password)
+        user = authenticate(username=email, password=password)
         login(scope, user)
-        return create_message(constant.ACTION_LOG_IN, constant.STATUS_OK, 'User logged in')
+        return create_message(constant.ACTION_LOGIN, constant.STATUS_OK, 'User logged in')
     except Exception as error:  # NOQA
         logger.debug(f'User could not be logged in: {error}')
-        return create_message(constant.ACTION_LOG_IN, constant.STATUS_FAIL, f'User not logged in: {error}')
+        return create_message(constant.ACTION_LOGIN, constant.STATUS_FAIL, f'User not logged in: {error}')
 
 
 def handle_search_ads(payload: dict):
@@ -59,11 +59,11 @@ def handle_view_ad(payload: dict):
     try:
         ad_id = payload[constant.AD_ID]
         result = Ad.objects.get(id=ad_id)
-        return create_message(constant.ACTION_PUSH_AD, constant.STATUS_OK, 'Ad returned',
+        return create_message(constant.ACTION_AD, constant.STATUS_OK, 'Ad returned',
                               AdSerializer(result).data)
     except Exception as error:
         logger.warning(f'Could not find Ad: {error}')
-        return create_message(constant.ACTION_PUSH_AD, constant.STATUS_FAIL, f'Search for ad failed: {error}')
+        return create_message(constant.ACTION_AD, constant.STATUS_FAIL, f'Search for ad failed: {error}')
 
 
 def handle_save_update_ad(payload: dict, user):

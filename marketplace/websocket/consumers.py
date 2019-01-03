@@ -32,13 +32,13 @@ def _handle_incoming_message(text_data: str, scope):
     action = text_data_dict[constant.ACTION]
     payload = text_data_dict.get(constant.PAYLOAD, None)
     user = scope[constant.SESSION_SCOPE_USER]
-    if action == constant.ACTION_FETCH_TOP_ADS:
+    if action == constant.ACTION_TOP_ADS:
         return handle_top_ads()
-    if action == constant.ACTION_LOG_IN:
+    if action == constant.ACTION_LOGIN:
         return handle_login(payload, scope)
     if action == constant.ACTION_SEARCH_ADS:
         return handle_search_ads(payload)
-    if action == constant.ACTION_FETCH_AD:
+    if action == constant.ACTION_AD:
         return handle_view_ad(payload)
     if action == constant.ACTION_SAVE_UPDATE_AD:
         return handle_save_update_ad(payload, user)
