@@ -45,7 +45,7 @@ def handle_login(payload: dict, scope):
         logger.debug(f'User could not be logged in: {error}')
         payload = create_message(constant.ACTION_LOGIN, constant.STATUS_FAIL, f'User not logged in: {error}')
         payload[constant.AUTH_KEY] = create_anonymous_auth()
-        return payload
+    return payload
 
 
 def handle_search_ads(payload: dict):

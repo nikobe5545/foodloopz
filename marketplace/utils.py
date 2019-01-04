@@ -26,20 +26,22 @@ def websocket_jwt_auth(function):
     @wraps(function)
     def wrapper(*args, **keyword_args):
         try:
-            text_data_dict = keyword_args['text_data_dict']
+            text_data_dict = keyword_args.get('text_data_dict', None)
+            if text_data_dict is None:
+                text_data_dict = args[0]
             auth = text_data_dict.get(constant.AUTH_KEY, {})
             token = auth.get(constant.AUTH_TOKEN_KEY, None)
             if token is not None:
                 auth = _handle_jwt(auth)
             else:
                 auth = create_anonymous_auth()
-            payload = function(*args, **keyword_args)
-            # If auth key already exists don't mess with it. Downstream function has apparently handled auth.
-            if constant.AUTH_KEY in payload:
-                return payload
         except Exception as e:  # NOQA
             logger.warning(f'Auth logic failed. Error = {e}')
             auth = create_anonymous_auth()
+        payload = function(*args, **keyword_args)
+        # If auth key already exists don't mess with it. Downstream function has apparently handled auth.
+        if constant.AUTH_KEY in payload:
+            return payload
         payload[constant.AUTH_KEY] = auth
         return payload
 
@@ -68,14 +70,14 @@ def _handle_jwt(auth):
 # When renewing we need to check if the user is still enabled (hit db)
 def renew_token(email):
     auth = {}
-    user = User.objects.first(email=email)
+    user = User.objects.filter(email=email).first()
     if user.is_active:
         now = datetime.datetime.utcnow()
         auth[constant.AUTH_TOKEN_KEY] = jwt.encode({
             'exp': now + timedelta_15_minutes,
             'email': user.email,
             'iss': 'foodloopz'
-        }, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+        }, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM).decode('utf-8')
         auth[constant.AUTH_EMAIL_KEY] = user.email
         auth[constant.AUTH_IS_ANONYMOUS_KEY] = False,
         auth[constant.AUTH_EXPIRES_KEY] = int((now + timedelta_7_days).timestamp())
