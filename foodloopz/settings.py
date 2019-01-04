@@ -97,7 +97,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Auth
 AUTHENTICATION_BACKENDS = ['foodloopz.auth.EmailBackend']
+JWT_SECRET = os.getenv('FOODLOOPZ_API_JWT_SECRET', 'the madbwoy secret from huvudsta')
+JWT_ALGORITHM = 'HS512'
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

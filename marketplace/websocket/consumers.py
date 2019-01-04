@@ -7,6 +7,7 @@ from marketplace import constant
 from marketplace.service import handle_top_ads, handle_login, handle_search_ads, handle_view_ad, \
     handle_save_update_ad, \
     handle_save_update_user, handle_reset_password
+from marketplace.utils import websocket_jwt_auth
 
 
 class MainConsumer(AsyncWebsocketConsumer):
@@ -20,15 +21,12 @@ class MainConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
         self.logger.debug(f'text_data = {text_data}, session = {self.scope["session"]}, user = {self.scope["user"]}')
-        payload = _handle_incoming_message(text_data=text_data, scope=self.scope)
-        if payload is not None:
-            await self.send(text_data=json.dumps(payload))
-        else:
-            self.logger.warning(f'Action not found. Incoming data = {text_data}')
+        payload = _handle_incoming_message(text_data_dict=json.loads(text_data), scope=self.scope)
+        await self.send(text_data=json.dumps(payload))
 
 
-def _handle_incoming_message(text_data: str, scope):
-    text_data_dict = json.loads(text_data)
+@websocket_jwt_auth
+def _handle_incoming_message(text_data_dict: dict, scope):
     action = text_data_dict[constant.ACTION]
     payload = text_data_dict.get(constant.PAYLOAD, None)
     user = scope[constant.SESSION_SCOPE_USER]
@@ -46,3 +44,4 @@ def _handle_incoming_message(text_data: str, scope):
         return handle_save_update_user(payload, user)
     if action == constant.ACTION_RESET_PASSWORD:
         return handle_reset_password(scope)
+    return {}

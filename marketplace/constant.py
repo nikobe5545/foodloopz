@@ -29,5 +29,12 @@ TEXT = 'text'
 ORGANIZATION_ID = 'organizationId'
 IMAGE = 'image'
 
+# # Auth
+AUTH_KEY = 'auth'
+AUTH_TOKEN_KEY = 'token'
+AUTH_EMAIL_KEY = 'email'
+AUTH_IS_ANONYMOUS_KEY = 'isAnonymous'
+AUTH_EXPIRES_KEY = 'expires'
+
 # Django keys
 SESSION_SCOPE_USER = 'user'

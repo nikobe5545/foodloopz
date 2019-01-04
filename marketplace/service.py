@@ -10,6 +10,7 @@ from django.db.models import Q
 from marketplace import constant
 from marketplace.models import Ad, AdCategory, Organization, Account
 from marketplace.serializers import AdSerializer
+from marketplace.utils import renew_token, create_anonymous_auth
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +34,18 @@ def handle_login(payload: dict, scope):
         email = payload[constant.EMAIL]
         password = payload[constant.PASSWORD]
         user = authenticate(username=email, password=password)
-        login(scope, user)
-        return create_message(constant.ACTION_LOGIN, constant.STATUS_OK, 'User logged in')
+        if user is not None:
+            login(scope, user)
+            payload = create_message(constant.ACTION_LOGIN, constant.STATUS_OK, 'User logged in')
+            payload[constant.AUTH_KEY] = renew_token(user.email)
+        else:
+            payload = create_message(constant.ACTION_LOGIN, constant.STATUS_FAIL, 'User could not be authenticated')
+            payload[constant.AUTH_KEY] = create_anonymous_auth()
     except Exception as error:  # NOQA
         logger.debug(f'User could not be logged in: {error}')
-        return create_message(constant.ACTION_LOGIN, constant.STATUS_FAIL, f'User not logged in: {error}')
+        payload = create_message(constant.ACTION_LOGIN, constant.STATUS_FAIL, f'User not logged in: {error}')
+        payload[constant.AUTH_KEY] = create_anonymous_auth()
+        return payload
 
 
 def handle_search_ads(payload: dict):
