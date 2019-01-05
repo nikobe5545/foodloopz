@@ -99,8 +99,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Auth
 AUTHENTICATION_BACKENDS = ['foodloopz.auth.EmailBackend']
-JWT_SECRET = os.getenv('FOODLOOPZ_API_JWT_SECRET', 'the madbwoy secret from huvudsta')
-JWT_ALGORITHM = 'HS512'
+JWT_AUTH_TOKEN_COOKIE_NAME = 'authtoken'
+JWT_AUTH_TOKEN_EXPIRY_TIME_SECONDS = 15*60
+JWT_AUTH_TOKEN_RENEWAL_LIMIT_TIME_SECONDS = 60 * 60 * 24 * 7  # Seven days
+JWT_AUTH_SECRET_KEY = os.getenv('FOODLOOPZ_API_JWT_SECRET', 'the madbwoy secret from huvudsta')
+JWT_AUTH_TOKEN_ENCRYPTION_ALGORITHM = 'HS512'
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

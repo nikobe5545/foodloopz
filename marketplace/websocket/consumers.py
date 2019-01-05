@@ -7,7 +7,6 @@ from marketplace import constant
 from marketplace.service import handle_top_ads, handle_login, handle_search_ads, handle_view_ad, \
     handle_save_update_ad, \
     handle_save_update_user, handle_reset_password
-from marketplace.utils import websocket_jwt_auth
 
 
 class MainConsumer(AsyncWebsocketConsumer):
@@ -20,12 +19,11 @@ class MainConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive(self, text_data=None, bytes_data=None):
-        self.logger.debug(f'text_data = {text_data}, session = {self.scope["session"]}, user = {self.scope["user"]}')
+        self.logger.debug(f'text_data = {text_data}')
         payload = _handle_incoming_message(text_data_dict=json.loads(text_data), scope=self.scope)
         await self.send(text_data=json.dumps(payload))
 
 
-@websocket_jwt_auth
 def _handle_incoming_message(text_data_dict: dict, scope):
     action = text_data_dict[constant.ACTION]
     payload = text_data_dict.get(constant.PAYLOAD, None)
