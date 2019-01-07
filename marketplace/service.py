@@ -21,12 +21,17 @@ class NotAuthorized(Exception):
 
 def handle_top_ads():
     try:
-        result = Ad.objects.order_by('-created')[:5]
+        result = get_top_ads()
         return create_message(constant.ACTION_TOP_ADS, constant.STATUS_OK, 'Top ads returned',
                               AdSerializer(result, many=True).data)
     except Exception as error:  # NOQA
         logger.warning(f'Could not fetch top ads: {error}')
         return create_message(constant.ACTION_TOP_ADS, constant.STATUS_FAIL, f'Fetching top ads failed: {error}')
+
+
+def get_top_ads():
+    result = Ad.objects.order_by('-created')[:5]
+    return result
 
 
 def handle_login(payload: dict, scope):

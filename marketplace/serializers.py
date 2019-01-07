@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from marketplace.models import Ad, Organization, Account
+from marketplace.models import Ad, Organization, Account, AdCategory
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,3 +32,9 @@ class AdSerializer(serializers.ModelSerializer):
         model = Ad
         fields = '__all__'
         depth = 1
+
+
+class AdCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdCategory
+        fields = '__all__'
