@@ -116,7 +116,7 @@ class Ad(TrackingModel, models.Model):
     unpublished_date = models.DateField(null=True, blank=True)
     price = models.FloatField(default=0)
     measurement = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Measurement])
-    amount_per_measurement = models.FloatField()
+    amount_per_unit = models.FloatField()
     quantity = models.IntegerField()
     total_weight = models.FloatField()
     shipping = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Shipping])

@@ -3,8 +3,9 @@ from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from marketplace.models import Account, Organization, Ad, AdCategory
-from marketplace.serializers import AdSerializer, AdCategorySerializer, OrganizationSerializer, UserSerializer
+from marketplace.models import Account, Organization, Ad, AdCategory, AdCertification
+from marketplace.serializers import AdSerializer, AdCategorySerializer, OrganizationSerializer, UserSerializer, \
+    AdCertificationSerializer
 from marketplace.service import get_top_ads
 
 User = get_user_model()
@@ -32,6 +33,12 @@ class AdViewSet(viewsets.ModelViewSet):
 class AdCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AdCategory.objects.all()
     serializer_class = AdCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AdCertificationViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AdCertification.objects.all()
+    serializer_class = AdCertificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
