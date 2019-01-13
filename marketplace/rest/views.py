@@ -21,7 +21,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 class AdViewSet(viewsets.ModelViewSet):
     queryset = Ad.objects.all()
     serializer_class = AdSerializer
-    permission_classes = [IsOwnerOrReadOnly, permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     @action(detail=False, methods=['get'], url_path='top-ads')
     def top_ads(self, request):

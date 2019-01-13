@@ -6,9 +6,9 @@ from marketplace.rest.views import AdViewSet, AdCategoryViewSet, UserProfileChan
     AdCertificationViewSet
 
 router = routers.SimpleRouter()
-router.register(r'api/rest/ads', AdViewSet)
-router.register(r'api/rest/ad-categories', AdCategoryViewSet)
-router.register(r'api/rest/ad-certifications', AdCertificationViewSet)
+router.register(r'api/rest/loops', AdViewSet)
+router.register(r'api/rest/loop-categories', AdCategoryViewSet)
+router.register(r'api/rest/loop-certifications', AdCertificationViewSet)
 router.register(r'api/rest/users', UserProfileChangeAPIView)
 router.register(r'api/rest/organizations', OrganizationChangeAPIView)
 
