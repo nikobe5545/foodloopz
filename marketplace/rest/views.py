@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
@@ -7,6 +9,8 @@ from marketplace.models import Account, Organization, Ad, AdCategory, AdCertific
 from marketplace.serializers import AdSerializer, AdCategorySerializer, OrganizationSerializer, UserSerializer, \
     AdCertificationSerializer
 from marketplace.service import get_top_ads
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 

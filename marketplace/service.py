@@ -1,6 +1,8 @@
 import logging
 
 from channels.auth import login
+from cloudinary import CloudinaryImage
+from cloudinary.models import CloudinaryField
 from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm, PasswordResetForm
 from django.contrib.auth.models import User
@@ -101,6 +103,7 @@ def handle_save_update_ad(payload: dict, user):
             ad.text = text
             ad.category = category
             ad.organization = organization
+            ad.image = CloudinaryField()
         except Ad.DoesNotExist:
             logger.debug('Ad not found. Creating new.')
             ad = Ad(heading=heading, text=text, category=category, organization=organization, account=account)
