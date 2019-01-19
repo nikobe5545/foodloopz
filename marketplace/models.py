@@ -121,7 +121,7 @@ class Ad(TrackingModel, models.Model):
     total_weight = models.FloatField()
     shipping = models.CharField(max_length=50, choices=[(entry.name, entry.value) for entry in Shipping])
     certifications = models.ManyToManyField(AdCertification)
-    image = CloudinaryField('image', null=True, blank=True)
+    image = models.CharField(max_length=255)
 
     def __str__(self):
         return f'{self.product} published {self.published_date} by {self.account}'
