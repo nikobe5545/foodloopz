@@ -3,7 +3,7 @@ import json
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from marketplace.auth.service import handle_login
+from marketplace.auth.service import handle_login, check_login_status
 
 
 @require_http_methods('POST')
@@ -12,4 +12,4 @@ def login(request: HttpRequest) -> HttpResponse:
 
 
 def check_login(request: HttpRequest) -> HttpResponse:
-    return check_login(request)
+    return check_login_status(request)

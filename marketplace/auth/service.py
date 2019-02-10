@@ -37,7 +37,7 @@ def create_auth_response_payload(user: User) -> dict:
     return payload
 
 
-def check_login(request: HttpRequest) -> JsonResponse:
+def check_login_status(request: HttpRequest) -> JsonResponse:
     user = request.user
     if user.is_authenticated:
         return JsonResponse(create_auth_response_payload(user))
