@@ -99,6 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Auth
+AUTH_USER_MODEL = 'marketplace.User'
 AUTHENTICATION_BACKENDS = ['foodloopz.auth.EmailBackend']
 JWT_SECRET = os.getenv('FOODLOOPZ_API_JWT_SECRET', 'the madbwoy secret from huvudsta')
 JWT_ALGORITHM = 'HS512'

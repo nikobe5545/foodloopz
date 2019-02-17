@@ -1,8 +1,10 @@
 from enum import Enum
 
 from cloudinary.models import CloudinaryField
-from django.contrib.auth.models import User
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import User, AbstractUser
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from marketplace.validators import validate_organization_number
 
@@ -41,9 +43,16 @@ class OrganizationCategory(TrackingModel, models.Model):
 class Organization(TrackingModel, models.Model):
     organization_number = models.IntegerField(validators=[validate_organization_number])
     name = models.CharField(max_length=255)
-    invoice_address = models.OneToOneField(Address, on_delete=models.CASCADE, related_name='invoice_address')
-    visiting_address = models.OneToOneField(Address, on_delete=models.CASCADE, related_name='visiting_address',
-                                            null=True, blank=True)
+    invoice_address = models.OneToOneField(Address,
+                                           on_delete=models.CASCADE,
+                                           related_name='invoice_address',
+                                           null=True,
+                                           blank=True)
+    visiting_address = models.OneToOneField(Address,
+                                            on_delete=models.CASCADE,
+                                            related_name='visiting_address',
+                                            null=True,
+                                            blank=True)
     number_of_employees = models.IntegerField(null=True)
     certifications = models.ManyToManyField(OrganizationCertification)
     has_alcohol_license = models.BooleanField(null=True)
@@ -56,6 +65,52 @@ class Organization(TrackingModel, models.Model):
         return {
             'id': self.id
         }
+
+
+class UserManager(BaseUserManager):
+    """Define a model manager for User model with no username field."""
+
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra_fields):
+        """Create and save a User with the given email and password."""
+        if not email:
+            raise ValueError('The given email must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra_fields):
+        """Create and save a regular User with the given email and password."""
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(email, password, **extra_fields)
+
+    def create_superuser(self, email, password, **extra_fields):
+        """Create and save a SuperUser with the given email and password."""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(email, password, **extra_fields)
+
+
+class User(AbstractUser):
+    """User model."""
+
+    username = None
+    email = models.EmailField(_('email address'), unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
 
 
 class Account(TrackingModel, models.Model):
