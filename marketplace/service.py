@@ -1,4 +1,5 @@
 import logging
+import re
 
 from channels.auth import login
 from cloudinary.models import CloudinaryField
@@ -186,7 +187,7 @@ def create_message(action: str, status: str, status_message: str, payload=None) 
 def handle_new_user(payload: dict) -> dict:
     user = persist_new_user(payload, role=constant.ROLE_ACCOUNT)
     organization = get_organization(payload)
-    account = persist_new_account(organization, user)
+    account = persist_new_account(organization, user, payload[constant.USER])
     send_activation_email(account)
     return dict()
 
@@ -199,11 +200,11 @@ def get_organization(payload: dict) -> Organization:
 
 def send_activation_email(account: Account):
     subject = 'Aktivera ditt Foodloopz-konto'
-    current_site = settings.DOMAIN_NAME
+    domain = settings.DOMAIN_NAME
     generator = PasswordResetTokenGenerator()
     message = render_to_string('email/activate_account.html', {
                 'user': account.user,
-                'domain': current_site.domain,
+                'domain': domain,
                 'uid': account.user.pk,
                 'token': generator.make_token(account.user),
             })
@@ -216,13 +217,15 @@ def send_activation_email(account: Account):
 def handle_new_user_and_organization(payload: dict) -> dict:
     organization = persist_new_organization(payload)
     user = persist_new_user(payload, role=constant.ROLE_ACCOUNT_ADMIN)
-    account = persist_new_account(organization, user)
+    account = persist_new_account(organization, user, payload[constant.USER])
     send_activation_email(account)
     return dict()
 
 
-def persist_new_account(organization: Organization, user: User) -> Account:
-    account = Account(user=user, organization=organization)
+def persist_new_account(organization: Organization, user: User, user_data: dict) -> Account:
+    account = Account(user=user,
+                      organization=organization,
+                      phone_number=user_data[constant.PHONE_NUMBER])
     account.save()
     return account
 
@@ -242,7 +245,8 @@ def persist_new_user(payload: dict, role: str) -> User:
 
 def persist_new_organization(payload: dict) -> Organization:
     organization_data = payload[constant.ORGANIZATION]
-    organization = Organization(organization_number=organization_data[constant.ORGANIZATION_NUMBER],
+    organization_number = re.sub("[^0-9]", "", organization_data[constant.ORGANIZATION_NUMBER])
+    organization = Organization(organization_number=organization_number,
                                 name=organization_data[constant.NAME])
     organization.save()
     return organization

@@ -2,7 +2,7 @@
     Hej {{ user.first_name }},
     Var vänlig klicka på länken för att aktivera din användare.
 
-    http://{{ domain }}{% url 'activate' uid=uid token=token %}
+    http://{{ domain }}/activate?uid={{ uid }}&token={{ token }}
 
     När din användare aktiverats kommer ett email skickas till Foodloopz för slutligt godkännande.
 {% endautoescape %}
