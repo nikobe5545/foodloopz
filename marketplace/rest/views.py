@@ -1,14 +1,20 @@
 import logging
+from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from rest_framework import permissions, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, authentication_classes
+from rest_framework.request import Request
 from rest_framework.response import Response
 
+from marketplace import constant
 from marketplace.models import Account, Organization, Ad, AdCategory, AdCertification
-from marketplace.serializers import AdSerializer, AdCategorySerializer, OrganizationSerializer, UserSerializer, \
+from marketplace.rest.permissions import IsNotAuthenticated
+from marketplace.rest.serializers import AdSerializer, AdCategorySerializer, OrganizationSerializer, UserSerializer, \
     AdCertificationSerializer
-from marketplace.service import get_top_ads
+from marketplace.rest.validation import validate_new_user, validate_new_organization, UserAlreadyExistsException, \
+    OrganizationAlreadyExistsException
+from marketplace.service import get_top_ads, handle_new_user_and_organization
 
 logger = logging.getLogger(__name__)
 
@@ -79,3 +85,22 @@ class OrganizationChangeAPIView(viewsets.ModelViewSet):
         permissions.IsAuthenticated,
         UserIsOrganizationOwnerOrReadOnly,
     )
+
+
+# # Function based views below
+
+@api_view(['POST'])
+@authentication_classes([IsNotAuthenticated])
+def post_new_user(request: Request) -> Response:
+    post_data = request.data
+    try:
+        user_data = post_data[constant.USER]
+        validate_new_user(user_data)
+        organization_data = post_data[constant.ORGANIZATION]
+        validate_new_organization(organization_data)
+    except UserAlreadyExistsException as e:
+        return Response({'fail': e}, status=HTTPStatus.BAD_REQUEST)
+    # Check if organization already exists. Fail if that is the case
+    except OrganizationAlreadyExistsException as e:
+        handle_new_user()
+    handle_new_user_and_organization(post_data)

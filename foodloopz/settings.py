@@ -100,9 +100,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Auth
 AUTH_USER_MODEL = 'marketplace.User'
-AUTHENTICATION_BACKENDS = ['foodloopz.auth.EmailBackend']
 JWT_SECRET = os.getenv('FOODLOOPZ_API_JWT_SECRET', 'the madbwoy secret from huvudsta')
 JWT_ALGORITHM = 'HS512'
+
+# Email
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'nikos.beis@gmail.com'
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+EMAIL_PORT = 587
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -126,3 +132,6 @@ STATIC_URL = '/static/'
 CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'dpdy0n2qi')
 CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
 CLOUDINARY_SECRET_KEY = os.getenv('CLOUDINARY_SECRET_KEY')
+
+# Current site
+DOMAIN_NAME = os.getenv('DOMAIN_NAME', 'localhost')

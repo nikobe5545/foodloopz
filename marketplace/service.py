@@ -1,17 +1,21 @@
 import logging
 
 from channels.auth import login
-from cloudinary import CloudinaryImage
 from cloudinary.models import CloudinaryField
 from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm, PasswordResetForm
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import EmailMessage
 from django.core.serializers import serialize
 from django.db.models import Q
+from django.template.loader import render_to_string
 
+from foodloopz import settings
 from marketplace import constant
-from marketplace.models import Ad, AdCategory, Organization, Account
-from marketplace.serializers import AdSerializer
+from marketplace.models import Ad, AdCategory, Organization, Account, User
+from marketplace.rest.serializers import AdSerializer
 from marketplace.utils import renew_token, create_anonymous_auth
 
 logger = logging.getLogger(__name__)
@@ -158,7 +162,7 @@ def handle_reset_password(payload: dict, scope):
         return create_message(constant.ACTION_RESET_PASSWORD, constant.STATUS_FAIL, 'Password reset failed')
 
 
-def handle_change_password(payload: dict, scope):
+def handle_change_password(payload: dict, scope) -> dict:
     form = PasswordChangeForm(user=scope.user, data=payload)
     if form.is_valid():
         form.save()
@@ -168,7 +172,7 @@ def handle_change_password(payload: dict, scope):
         return create_message(constant.ACTION_CHANGE_PASSWORD, constant.STATUS_FAIL, 'Password not changed')
 
 
-def create_message(action: str, status: str, status_message: str, payload=None):
+def create_message(action: str, status: str, status_message: str, payload=None) -> dict:
     message_dict = {
         constant.ACTION: action,
         constant.STATUS: status,
@@ -177,3 +181,68 @@ def create_message(action: str, status: str, status_message: str, payload=None):
     if payload is not None:
         message_dict[constant.PAYLOAD] = payload
     return message_dict
+
+
+def handle_new_user(payload: dict) -> dict:
+    user = persist_new_user(payload, role=constant.ROLE_ACCOUNT)
+    organization = get_organization(payload)
+    account = persist_new_account(organization, user)
+    send_activation_email(account)
+    return dict()
+
+
+def get_organization(payload: dict) -> Organization:
+    organization_data = payload[constant.ORGANIZATION]
+    return Organization.objects.filter(
+        organization_number=organization_data[constant.ORGANIZATION_NUMBER]).first()
+
+
+def send_activation_email(account: Account):
+    subject = 'Aktivera ditt Foodloopz-konto'
+    current_site = settings.DOMAIN_NAME
+    generator = PasswordResetTokenGenerator()
+    message = render_to_string('email/activate_account.html', {
+                'user': account.user,
+                'domain': current_site.domain,
+                'uid': account.user.pk,
+                'token': generator.make_token(account.user),
+            })
+    email_message = EmailMessage(
+        subject, message, to=[account.user.email]
+    )
+    email_message.send()
+
+
+def handle_new_user_and_organization(payload: dict) -> dict:
+    organization = persist_new_organization(payload)
+    user = persist_new_user(payload, role=constant.ROLE_ACCOUNT_ADMIN)
+    account = persist_new_account(organization, user)
+    send_activation_email(account)
+    return dict()
+
+
+def persist_new_account(organization: Organization, user: User) -> Account:
+    account = Account(user=user, organization=organization)
+    account.save()
+    return account
+
+
+def persist_new_user(payload: dict, role: str) -> User:
+    user_data = payload[constant.USER]
+    # Setting full name (first name + last name) in the first name field. No need to separate them
+    user = User.objects.create_user(user_data[constant.EMAIL],
+                                    user_data[constant.PASSWORD],
+                                    first_name=user_data[constant.NAME],
+                                    is_active=False)
+    group = Group.objects.filter(name=role).first()
+    user.groups.set([group])
+    user.save()
+    return user
+
+
+def persist_new_organization(payload: dict) -> Organization:
+    organization_data = payload[constant.ORGANIZATION]
+    organization = Organization(organization_number=organization_data[constant.ORGANIZATION_NUMBER],
+                                name=organization_data[constant.NAME])
+    organization.save()
+    return organization
