@@ -189,7 +189,7 @@ def handle_new_user(payload: dict) -> dict:
     organization = get_organization(payload)
     account = persist_new_account(organization, user, payload[constant.USER])
     send_activation_email(account)
-    return dict()
+    return user, organization
 
 
 def get_organization(payload: dict) -> Organization:
@@ -208,9 +208,10 @@ def send_activation_email(account: Account):
                 'uid': account.user.pk,
                 'token': generator.make_token(account.user),
             })
-    email_message = EmailMessage(
-        subject, message, to=[account.user.email]
-    )
+    email_message = EmailMessage(subject,
+                                 message,
+                                 from_email='nikos@beis.se',
+                                 to=[account.user.email])
     email_message.send()
 
 
@@ -219,7 +220,7 @@ def handle_new_user_and_organization(payload: dict) -> dict:
     user = persist_new_user(payload, role=constant.ROLE_ACCOUNT_ADMIN)
     account = persist_new_account(organization, user, payload[constant.USER])
     send_activation_email(account)
-    return dict()
+    return user, organization
 
 
 def persist_new_account(organization: Organization, user: User, user_data: dict) -> Account:

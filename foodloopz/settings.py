@@ -104,11 +104,11 @@ JWT_SECRET = os.getenv('FOODLOOPZ_API_JWT_SECRET', 'the madbwoy secret from huvu
 JWT_ALGORITHM = 'HS512'
 
 # Email
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'nikos.beis@gmail.com'
+EMAIL_USE_TLS = False
+EMAIL_HOST = '192.168.1.10'
+EMAIL_HOST_USER = 'nikosb'
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = 587
+EMAIL_PORT = 25
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

@@ -1,7 +1,8 @@
 import logging
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.request import Request
@@ -101,8 +102,36 @@ def post_new_account(request: Request) -> Response:
     except UserAlreadyExistsException as e:
         return Response({'fail': e}, status=HTTPStatus.BAD_REQUEST)
     # Check if organization already exists. Fail if that is the case
-    except OrganizationAlreadyExistsException as e:
-        handle_new_user(post_data)
+    except OrganizationAlreadyExistsException:
+        user, organization = handle_new_user(post_data)
+        data = _create_user_organization_data(user, organization)
+        return Response(data)
+    user, organization = handle_new_user_and_organization(post_data)
+    data = _create_user_organization_data(user, organization)
+    return Response(data)
+
+
+def _create_user_organization_data(user: User, organization: Organization) -> dict:
+    serialized_user = UserSerializer(user).data
+    serialized_organization = OrganizationSerializer(organization).data
+    data = {
+        constant.USER: serialized_user,
+        constant.ORGANIZATION: serialized_organization
+    }
+    return data
+
+
+@api_view(['GET'])
+def confirm_email(request: Request, uid: str, token: str) -> Response:
+    try:
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    generator = PasswordResetTokenGenerator()
+    if user is not None and generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
         return Response({'success': True})
-    handle_new_user_and_organization(post_data)
-    return Response({'success': True})
+    else:
+        return Response({'success': False})

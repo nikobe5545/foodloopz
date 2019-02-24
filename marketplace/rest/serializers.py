@@ -1,7 +1,6 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from marketplace.models import Ad, Organization, Account, AdCategory, AdCertification
+from marketplace.models import Ad, Organization, Account, AdCategory, AdCertification, User
 
 
 class UserSerializer(serializers.ModelSerializer):
